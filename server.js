@@ -26,11 +26,14 @@ app.get("/", (req, res) => {
 // ✅ transporter (WITH TIMEOUT 🔥)
 const transporter = nodemailer.createTransport({
   host: "101.hostinglogin.net",
-  port: 587,
-  secure: false,
+  port: 465,          // 🔥 use SSL port
+  secure: true,       // 🔥 MUST be true with 465
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false // 🔥 fixes certificate mismatch
   },
   connectionTimeout: 5000,
   greetingTimeout: 5000,
