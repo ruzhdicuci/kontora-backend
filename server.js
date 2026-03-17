@@ -9,18 +9,14 @@ const PORT = process.env.PORT || 3000;
 // ✅ middleware
 app.use(express.json());
 
-// ✅ CORS (IMPORTANT)
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+const cors = require("cors");
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-
-  next();
-});
+// ✅ proper CORS (handles preflight automatically)
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"]
+}));
 
 // ✅ transporter (your hosting SMTP)
 const transporter = nodemailer.createTransport({
