@@ -25,7 +25,7 @@ app.get("/", (req, res) => {
 
 // ✅ transporter (WITH TIMEOUT 🔥)
 const transporter = nodemailer.createTransport({
-  host: "101.hostinglogin.net",
+  host: "kontora.ch",
   port: 465,          // 🔥 use SSL port
   secure: true,       // 🔥 MUST be true with 465
   auth: {
