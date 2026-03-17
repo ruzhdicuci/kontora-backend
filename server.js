@@ -7,7 +7,9 @@ const { Resend } = require("resend");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ Middleware
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Middleware
 app.use(express.json());
 
 app.use(cors({
@@ -16,15 +18,12 @@ app.use(cors({
   allowedHeaders: ["Content-Type"]
 }));
 
-// ✅ Health check (VERY IMPORTANT for Render)
+// Health check
 app.get("/", (req, res) => {
   res.send("Kontora backend running 🚀");
 });
 
-// ✅ Init Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// ✅ Feedback route
+// Feedback route
 app.post("/feedback", async (req, res) => {
   const { message, version, userAgent } = req.body;
 
@@ -32,38 +31,28 @@ app.post("/feedback", async (req, res) => {
     return res.status(400).json({ success: false });
   }
 
-  console.log("📩 Incoming feedback:", message);
-
   try {
     await resend.emails.send({
-      from: "Kontora <onboarding@resend.dev>", // change later after domain verify
-      to: process.env.EMAIL_USER,
-      subject: "📩 New Kontora Feedback",
+      from: "Kontora <onboarding@resend.dev>",
+      to: "ruzhdicuci@gmail.com", // 🔥 your inbox
+      subject: "📩 Kontora Feedback",
       text: `
-New Feedback:
-
 ${message}
 
-App Version: ${version}
+Version: ${version}
 User: ${userAgent}
       `
     });
 
-    console.log("✅ Email sent");
-
     return res.json({ success: true });
 
   } catch (err) {
-    console.error("❌ Email failed:", err);
-
-    return res.status(500).json({
-      success: false,
-      error: err.message
-    });
+    console.error(err);
+    return res.status(500).json({ success: false });
   }
 });
 
-// ✅ Start server
+// Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
