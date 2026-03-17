@@ -2,7 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,13 +16,19 @@ app.use(cors({
   allowedHeaders: ["Content-Type"]
 }));
 
-// ✅ Health check (VERY IMPORTANT for Render)
+// ✅ Health check
 app.get("/", (req, res) => {
   res.send("Kontora backend running 🚀");
 });
 
-// ✅ Init Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// ✅ SMTP (GMAIL or your mail server)
+const transporter = nodemailer.createTransport({
+  service: "gmail", // 🔥 easiest
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS // app password
+  }
+});
 
 // ✅ Feedback route
 app.post("/feedback", async (req, res) => {
@@ -35,8 +41,8 @@ app.post("/feedback", async (req, res) => {
   console.log("📩 Incoming feedback:", message);
 
   try {
-    await resend.emails.send({
-      from: "Kontora <onboarding@resend.dev>", // change later after domain verify
+    await transporter.sendMail({
+      from: `"Kontora Feedback" <${process.env.EMAIL_USER}>`,
       to: process.env.EMAIL_USER,
       subject: "📩 New Kontora Feedback",
       text: `
