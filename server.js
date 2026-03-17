@@ -1,5 +1,7 @@
 require("dotenv").config();
-
+app.get("/", (req, res) => {
+  res.send("Kontora backend running 🚀");
+});
 const express = require("express");
 const nodemailer = require("nodemailer");
 
@@ -11,12 +13,15 @@ app.use(express.json());
 
 const cors = require("cors");
 
-// ✅ proper CORS (handles preflight automatically)
+// 🔥 MUST be before routes
 app.use(cors({
   origin: "*",
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"]
 }));
+
+// 🔥 EXPLICIT preflight handler (VERY IMPORTANT)
+app.options("/feedback", cors());
 
 // ✅ transporter (your hosting SMTP)
 const transporter = nodemailer.createTransport({
