@@ -1,46 +1,30 @@
 require("dotenv").config();
 
 const express = require("express");
-const nodemailer = require("nodemailer");
 const cors = require("cors");
+const { Resend } = require("resend");
 
 const app = express();
-
 const PORT = process.env.PORT || 3000;
 
-// ✅ middleware
+// ✅ Middleware
 app.use(express.json());
 
-// ✅ CORS
 app.use(cors({
   origin: "*",
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"]
 }));
 
-// ✅ health check
+// ✅ Health check (VERY IMPORTANT for Render)
 app.get("/", (req, res) => {
   res.send("Kontora backend running 🚀");
 });
 
-// ✅ transporter (WITH TIMEOUT 🔥)
-const transporter = nodemailer.createTransport({
-  host: "kontora.ch",
-  port: 465,          // 🔥 use SSL port
-  secure: true,       // 🔥 MUST be true with 465
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false // 🔥 fixes certificate mismatch
-  },
-  connectionTimeout: 5000,
-  greetingTimeout: 5000,
-  socketTimeout: 5000
-});
+// ✅ Init Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ✅ route
+// ✅ Feedback route
 app.post("/feedback", async (req, res) => {
   const { message, version, userAgent } = req.body;
 
@@ -51,8 +35,8 @@ app.post("/feedback", async (req, res) => {
   console.log("📩 Incoming feedback:", message);
 
   try {
-    await transporter.sendMail({
-      from: `"Kontora Feedback" <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+      from: "Kontora <onboarding@resend.dev>", // change later after domain verify
       to: process.env.EMAIL_USER,
       subject: "📩 New Kontora Feedback",
       text: `
@@ -67,7 +51,7 @@ User: ${userAgent}
 
     console.log("✅ Email sent");
 
-    return res.json({ success: true }); // 🔥 ALWAYS RETURN
+    return res.json({ success: true });
 
   } catch (err) {
     console.error("❌ Email failed:", err);
@@ -79,6 +63,7 @@ User: ${userAgent}
   }
 });
 
+// ✅ Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
