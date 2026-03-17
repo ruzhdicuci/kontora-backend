@@ -4,7 +4,7 @@ const express = require("express");
 const nodemailer = require("nodemailer");
 const cors = require("cors");
 
-const app = express(); // ✅ MUST COME BEFORE USING app
+const app = express();
 
 const PORT = process.env.PORT || 3000;
 
@@ -17,14 +17,13 @@ app.use(cors({
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"]
 }));
-app.options("/feedback", cors());
 
-// ✅ TEST ROUTE (NOW SAFE)
+// ✅ health check
 app.get("/", (req, res) => {
   res.send("Kontora backend running 🚀");
 });
 
-// ✅ transporter (your hosting SMTP)
+// ✅ transporter (WITH TIMEOUT 🔥)
 const transporter = nodemailer.createTransport({
   host: "101.hostinglogin.net",
   port: 587,
@@ -32,13 +31,10 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  }
-});
-
-// ✅ test SMTP
-transporter.verify((err) => {
-  if (err) console.error("❌ SMTP ERROR:", err);
-  else console.log("✅ SMTP READY");
+  },
+  connectionTimeout: 5000,
+  greetingTimeout: 5000,
+  socketTimeout: 5000
 });
 
 // ✅ route
@@ -48,6 +44,8 @@ app.post("/feedback", async (req, res) => {
   if (!message) {
     return res.status(400).json({ success: false });
   }
+
+  console.log("📩 Incoming feedback:", message);
 
   try {
     await transporter.sendMail({
@@ -65,11 +63,16 @@ User: ${userAgent}
     });
 
     console.log("✅ Email sent");
-    res.json({ success: true });
+
+    return res.json({ success: true }); // 🔥 ALWAYS RETURN
 
   } catch (err) {
     console.error("❌ Email failed:", err);
-    res.status(500).json({ success: false });
+
+    return res.status(500).json({
+      success: false,
+      error: err.message
+    });
   }
 });
 
