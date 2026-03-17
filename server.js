@@ -1,7 +1,6 @@
 require("dotenv").config();
 
 const express = require("express");
-const cors = require("cors");
 const nodemailer = require("nodemailer");
 
 const app = express();
@@ -10,24 +9,34 @@ const PORT = process.env.PORT || 3000;
 // ✅ Middleware
 app.use(express.json());
 
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"]
-}));
+// ✅ CORS (SAFE VERSION)
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
 
 // ✅ Health check
 app.get("/", (req, res) => {
   res.send("Kontora backend running 🚀");
 });
 
-// ✅ SMTP (GMAIL or your mail server)
+// ✅ SMTP (GMAIL APP PASSWORD REQUIRED)
 const transporter = nodemailer.createTransport({
-  service: "gmail", // 🔥 easiest
+  service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS // app password
-  }
+    pass: process.env.EMAIL_PASS
+  },
+  connectionTimeout: 5000,
+  greetingTimeout: 5000,
+  socketTimeout: 5000
 });
 
 // ✅ Feedback route
